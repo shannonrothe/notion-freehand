@@ -34,7 +34,7 @@ const StyledColorButton = styled('button', {
   },
 });
 
-const StyledExportButton = styled('button', {
+export const StyledSaveButton = styled('button', {
   all: 'unset',
   cursor: 'pointer',
   padding: 'var(--size-2) var(--size-3)',
@@ -90,7 +90,7 @@ export const Toolbar = ({
           onClick={onPickColor}
         />
       ))}
-      <StyledExportButton onClick={onExport}>Save</StyledExportButton>
+      <StyledSaveButton onClick={onExport}>Save</StyledSaveButton>
     </ToolbarContainer>
   );
 };

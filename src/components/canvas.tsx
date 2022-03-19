@@ -51,65 +51,62 @@ type CanvasProps = {
   onAddPath: (path: Path) => void;
 };
 
-export const Canvas = observer(
-  React.forwardRef((props: CanvasProps, ref: React.Ref<SVGSVGElement>) => {
-    const snapshot = useLocalObservable<State>(() => ({
-      drawing: false,
-      points: [],
-    }));
-    const { onAddPath, paths } = props;
-    const outlinePoints = getStroke([...snapshot.points], {
-      size: 5,
-      smoothing: 1.5,
-    });
-    const path = getSvgPathFromStroke(outlinePoints);
+export const Canvas = observer((props: CanvasProps) => {
+  const snapshot = useLocalObservable<State>(() => ({
+    drawing: false,
+    points: [],
+  }));
+  const { onAddPath, paths } = props;
+  const outlinePoints = getStroke([...snapshot.points], {
+    size: 5,
+    smoothing: 1.5,
+  });
+  const path = getSvgPathFromStroke(outlinePoints);
 
-    const addPoint = action((point: Point) => {
-      snapshot.points = [...snapshot.points, point];
-    });
+  const addPoint = action((point: Point) => {
+    snapshot.points = [...snapshot.points, point];
+  });
 
-    const handlePointerDown = action((e: React.PointerEvent) => {
-      snapshot.drawing = true;
-      addPoint({ x: e.clientX, y: e.clientY });
-    });
+  const handlePointerDown = action((e: React.PointerEvent) => {
+    snapshot.drawing = true;
+    addPoint({ x: e.clientX, y: e.clientY });
+  });
 
-    const handlePointerMove = (e: React.PointerEvent) => {
-      if (!snapshot.drawing) {
-        return;
-      }
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!snapshot.drawing) {
+      return;
+    }
 
-      addPoint({ x: e.clientX, y: e.clientY });
-    };
+    addPoint({ x: e.clientX, y: e.clientY });
+  };
 
-    const handlePointerUp = action(() => {
-      snapshot.drawing = false;
-      snapshot.points = [];
-      onAddPath({ d: path, color: props.color });
-    });
+  const handlePointerUp = action(() => {
+    snapshot.drawing = false;
+    snapshot.points = [];
+    onAddPath({ d: path, color: props.color });
+  });
 
-    return (
-      <Svg
-        ref={ref}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        {paths.map((path, index) => (
-          <StyledPath
-            key={index}
-            stroke={getColor(path.color)}
-            fill={getColor(path.color)}
-            d={path.d}
-          />
-        ))}
-        {path && (
-          <StyledPath
-            stroke={getColor(props.color)}
-            fill={getColor(props.color)}
-            d={path}
-          />
-        )}
-      </Svg>
-    );
-  })
-);
+  return (
+    <Svg
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
+      {paths.map((path, index) => (
+        <StyledPath
+          key={index}
+          stroke={getColor(path.color)}
+          fill={getColor(path.color)}
+          d={path.d}
+        />
+      ))}
+      {path && (
+        <StyledPath
+          stroke={getColor(props.color)}
+          fill={getColor(props.color)}
+          d={path}
+        />
+      )}
+    </Svg>
+  );
+});

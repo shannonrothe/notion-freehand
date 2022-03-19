@@ -4,9 +4,12 @@ import 'pollen-css';
 import { Canvas, Path } from './components/canvas';
 import { Canvg, presets } from 'canvg';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { action } from 'mobx';
+import { action, runInAction } from 'mobx';
 import './App.css';
 import { v4 } from 'uuid';
+import { Modal } from './components/modal';
+import { toastful } from 'react-toastful';
+import { styled } from '@stitches/react';
 
 interface HistoryEntry {
   redo: () => void;
@@ -19,7 +22,13 @@ type State = {
   paths: Path[];
   history: HistoryEntry[];
   index: number;
+  open: boolean;
 };
+
+const Success = styled('div', {
+  fontFamily: 'var(--font-sans)',
+  fontSize: 'var(--scale-00)',
+});
 
 const App = observer(() => {
   const snapshot = useLocalObservable<State>(() => ({
@@ -28,9 +37,33 @@ const App = observer(() => {
     paths: [],
     history: [],
     index: 0,
+    open: false,
   }));
-  const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
-  const [uuid] = useState(() => v4());
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    const _name = new URLSearchParams(window.location.search).get('name');
+    if (_name) {
+      setName(_name);
+      try {
+        const stored = localStorage.getItem(_name);
+        if (!stored) {
+          return;
+        }
+        const file = JSON.parse(stored);
+        runInAction(() => {
+          snapshot.color = file.color;
+          snapshot.paths = file.paths;
+        });
+      } catch {
+        // Unable to load file. Do nothing.
+      }
+    } else {
+      const _name = v4();
+      window.location.href = `${window.location.href}?name=${_name}`;
+      setName(_name);
+    }
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -59,28 +92,12 @@ const App = observer(() => {
 
   const handlePickColor = action((color: string) => (snapshot.color = color));
   const handleExport = async () => {
-    if (!svgRef) {
-      return;
-    }
-
-    const { width, height } = svgRef.getBoundingClientRect();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      const v = await Canvg.from(ctx, svgRef.outerHTML, presets.offscreen());
-      v.resize(width, height, 'xMidYMid meet');
-      await v.render();
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-
-        const reader = new FileReader();
-        reader.onload = action(() => {
-          if (reader.result) {
-            localStorage.setItem(uuid, reader.result.toString());
-          }
-        });
-        reader.readAsDataURL(blob);
+    if (name) {
+      localStorage.setItem(name, JSON.stringify(snapshot));
+      toastful.success(<Success>Changes saved</Success>, {
+        position: 'bottom_right',
       });
+      return;
     }
   };
 
@@ -100,10 +117,15 @@ const App = observer(() => {
     snapshot.index++;
   });
 
+  const handleSave = () => {
+    if (name) {
+      localStorage.setItem(name, JSON.stringify(snapshot));
+    }
+  };
+
   return (
     <>
       <Canvas
-        ref={setSvgRef}
         paths={snapshot.paths}
         color={snapshot.color}
         onAddPath={handleAddPath}
@@ -112,6 +134,11 @@ const App = observer(() => {
         color={snapshot.color}
         onPickColor={handlePickColor}
         onExport={handleExport}
+      />
+      <Modal
+        open={snapshot.open}
+        onClose={action(() => (snapshot.open = false))}
+        onConfirm={handleSave}
       />
     </>
   );
