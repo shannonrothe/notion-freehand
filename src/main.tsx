@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Toastful } from 'react-toastful';
 import App from './App';
+import 'pollen-css';
 
 const g = globalCss({
   '*': {

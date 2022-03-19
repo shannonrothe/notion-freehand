@@ -8,6 +8,12 @@ export interface HistoryEntry {
   undo: () => void;
 }
 
+export enum Status {
+  DIRTY,
+  SAVING,
+  SAVED,
+}
+
 export type State = {
   color: string;
   dataUrl?: string;
@@ -15,5 +21,5 @@ export type State = {
   history: HistoryEntry[];
   index: number;
   open: boolean;
-  status: 'dirty' | 'saved';
+  status: Status;
 };

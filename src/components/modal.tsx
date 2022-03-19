@@ -2,14 +2,8 @@ import { Dialog } from '@headlessui/react';
 import { styled } from '@stitches/react';
 import { action, runInAction } from 'mobx';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { StyledSaveButton } from './toolbar';
-
-const StyledInput = styled('input', {
-  borderRadius: 'var(--radius-sm)',
-  background: 'white',
-  border: '1px solid var(--color-grey-100)',
-  padding: 'var(--size-2) var(--size-3)',
-});
+import { StyledInput } from './input';
+import { StyledButton } from './toolbar';
 
 const StyledOverlay = styled(Dialog.Overlay, {
   position: 'fixed',
@@ -87,7 +81,7 @@ export const Modal = observer(
               marginTop: '1rem',
             }}
           >
-            <StyledSaveButton onClick={handleSave}>Save</StyledSaveButton>
+            <StyledButton onClick={handleSave}>Save</StyledButton>
           </div>
         </Container>
       </Dialog>

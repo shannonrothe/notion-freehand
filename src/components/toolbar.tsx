@@ -1,5 +1,6 @@
 import { styled } from '@stitches/react';
 import { observer } from 'mobx-react';
+import { Status } from '../types';
 
 const COLORS = [
   'color-red',
@@ -15,8 +16,21 @@ const ToolbarContainer = styled('div', {
   width: 'var(--size-full)',
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   gap: 'var(--size-2)',
   padding: 'var(--scale-1)',
+});
+
+const ColorContainer = styled('div', {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--size-2)',
+});
+
+const ButtonContainer = styled('div', {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1rem',
 });
 
 const StyledColorButton = styled('button', {
@@ -35,7 +49,7 @@ const StyledColorButton = styled('button', {
   },
 });
 
-export const StyledSaveButton = styled('button', {
+export const StyledButton = styled('button', {
   all: 'unset',
   cursor: 'pointer',
   padding: 'var(--size-2) var(--size-3)',
@@ -51,7 +65,7 @@ export const StyledSaveButton = styled('button', {
     background: 'var(--color-grey-50)',
   },
   variants: {
-    saved: {
+    isDisabled: {
       true: {
         pointerEvents: 'none',
         opacity: '0.5',
@@ -85,26 +99,35 @@ export const Toolbar = observer(
     color: selectedColor,
     status,
     onPickColor,
-    onExport,
+    onSave,
+    onLogout,
   }: {
     color: string;
-    status: 'saved' | 'dirty';
+    status: Status;
     onPickColor: (color: string) => void;
-    onExport: () => void;
+    onLogout: () => void;
+    onSave: () => void;
   }) => {
+    const disabled = status === Status.SAVING || status === Status.SAVED;
+
     return (
       <ToolbarContainer>
-        {COLORS.map((color) => (
-          <ColorButton
-            key={color}
-            selected={color === selectedColor}
-            color={color}
-            onClick={onPickColor}
-          />
-        ))}
-        <StyledSaveButton saved={status === 'saved'} onClick={onExport}>
-          Save
-        </StyledSaveButton>
+        <ColorContainer>
+          {COLORS.map((color) => (
+            <ColorButton
+              key={color}
+              selected={color === selectedColor}
+              color={color}
+              onClick={onPickColor}
+            />
+          ))}
+        </ColorContainer>
+        <ButtonContainer>
+          <StyledButton onClick={onLogout}>Log out</StyledButton>
+          <StyledButton isDisabled={disabled} onClick={onSave}>
+            Save
+          </StyledButton>
+        </ButtonContainer>
       </ToolbarContainer>
     );
   }

@@ -1,6 +1,6 @@
 import { action } from 'mobx';
 import { useEffect } from 'react';
-import { HistoryEntry, Path, State } from '../types';
+import { HistoryEntry, Path, State, Status } from '../types';
 
 export const useHistory = (store: State) => {
   useEffect(() => {
@@ -43,15 +43,15 @@ export const useHistory = (store: State) => {
         {
           redo: action(() => (store.paths = nextPaths)),
           undo: action(() => {
-            store.status = 'dirty';
+            store.status = Status.DIRTY;
             store.paths = previousPaths;
           }),
         },
       ],
       nextPaths
     );
-    if (store.status === 'saved') {
-      store.status = 'dirty';
+    if (store.status === Status.SAVED) {
+      store.status = Status.DIRTY;
     }
   });
 

@@ -1,10 +1,11 @@
 import { styled } from '@stitches/react';
-import { action } from 'mobx';
+import { action, runInAction } from 'mobx';
 import { useEffect } from 'react';
 import { toastful } from 'react-toastful';
-import { State } from '../types';
+import { State, Status } from '../types';
+import supabase from '../lib/client';
 
-const Success = styled('div', {
+const Success = styled('p', {
   fontFamily: 'var(--font-sans)',
   fontSize: 'var(--scale-00)',
 });
@@ -12,7 +13,7 @@ const Success = styled('div', {
 export const usePersist = (name: string, store: State) => {
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (store.status === 'dirty') {
+      if (store.status === Status.DIRTY) {
         const leave = confirm(
           'You have unsaved changes. Are you sure you want to leave?'
         );
@@ -30,13 +31,23 @@ export const usePersist = (name: string, store: State) => {
     };
   });
 
-  const save = action(() => {
-    localStorage.setItem(name, JSON.stringify(store));
-    toastful.success(<Success>Changes saved</Success>, {
-      position: 'bottom_right',
-    });
-    store.status = 'saved';
-  });
+  const save = async () => {
+    runInAction(() => (store.status = Status.SAVING));
+    const resp = await supabase
+      .from('drawings')
+      .update({ paths: store.paths })
+      .eq('name', name);
+    if (resp.error) {
+      runInAction(() => (store.status = Status.DIRTY));
+    } else {
+      toastful.success(<Success>Changes saved</Success>, {
+        position: 'bottom_right',
+      });
+      runInAction(() => {
+        store.status = Status.SAVED;
+      });
+    }
+  };
 
   return { save };
 };
