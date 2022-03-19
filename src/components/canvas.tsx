@@ -3,6 +3,7 @@ import { action } from 'mobx';
 import { observer, useLocalObservable } from 'mobx-react';
 import getStroke from 'perfect-freehand';
 import React from 'react';
+import { Path } from '../types';
 
 type Point = {
   x: number;
