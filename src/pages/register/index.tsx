@@ -4,6 +4,7 @@ import { useLocalObservable } from 'mobx-react';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 import { useNavigate } from 'react-router';
+import { Link } from 'react-router-dom';
 import { toastful } from 'react-toastful';
 import { StyledInput } from '../../components/input';
 import { StyledButton } from '../../components/toolbar';
@@ -13,6 +14,7 @@ const Container = styled('div', {
   width: '100%',
   height: '100%',
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   background: 'var(--color-grey-50)',
@@ -34,6 +36,13 @@ const Form = styled('form', {
   background: 'white',
   border: '1px solid var(--color-grey-100)',
   borderRadius: 'var(--radius-md)',
+});
+
+const StyledLink = styled(Link, {
+  marginTop: 'var(--size-8)',
+  color: 'var(--color-blue)',
+  fontFamily: 'var(--font-sans)',
+  textDecoration: 'underline',
 });
 
 const Error = styled('p', {
@@ -76,21 +85,25 @@ export const Register = observer(() => {
       <Form onSubmit={handleSubmit}>
         <Title>notion-freehand</Title>
         <StyledInput
+          placeholder="Email address"
           value={store.username}
           onChange={action((e) => (store.username = e.target.value))}
         />
         <StyledInput
           type="password"
+          placeholder="••••••••••"
           value={store.password}
           onChange={action((e) => (store.password = e.target.value))}
         />
         <StyledInput
           type="password"
+          placeholder="••••••••••"
           value={store.confirmPassword}
           onChange={action((e) => (store.confirmPassword = e.target.value))}
         />
         <StyledButton type="submit">Sign up</StyledButton>
       </Form>
+      <StyledLink to="/login">Already have an account?</StyledLink>
     </Container>
   );
 });
