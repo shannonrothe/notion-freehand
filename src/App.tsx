@@ -30,6 +30,9 @@ const Success = styled('div', {
   fontSize: 'var(--scale-00)',
 });
 
+const setPageTitle = (name: string) =>
+  (document.title = `${name} - notion-freehand`);
+
 const App = observer(() => {
   const snapshot = useLocalObservable<State>(() => ({
     color: 'color-black',
@@ -46,6 +49,7 @@ const App = observer(() => {
     const _name = new URLSearchParams(window.location.search).get('name');
     if (_name) {
       setName(_name);
+      setPageTitle(_name);
       try {
         const stored = localStorage.getItem(_name);
         if (!stored) {
@@ -63,6 +67,7 @@ const App = observer(() => {
       const _name = v4();
       window.location.href = `${window.location.href}?name=${_name}`;
       setName(_name);
+      setPageTitle(_name);
     }
   }, []);
 
@@ -93,7 +98,6 @@ const App = observer(() => {
 
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      console.log(snapshot.status);
       if (snapshot.status === 'dirty') {
         const leave = confirm(
           'You have unsaved changes. Are you sure you want to leave?'
