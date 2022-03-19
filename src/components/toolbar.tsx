@@ -90,7 +90,7 @@ export const Toolbar = ({
           onClick={onPickColor}
         />
       ))}
-      <StyledExportButton onClick={onExport}>Export</StyledExportButton>
+      <StyledExportButton onClick={onExport}>Save</StyledExportButton>
     </ToolbarContainer>
   );
 };

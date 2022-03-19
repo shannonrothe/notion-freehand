@@ -6,6 +6,7 @@ import { Canvg, presets } from 'canvg';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { action } from 'mobx';
 import './App.css';
+import { v4 } from 'uuid';
 
 interface HistoryEntry {
   redo: () => void;
@@ -29,6 +30,7 @@ const App = observer(() => {
     index: 0,
   }));
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
+  const [uuid] = useState(() => v4());
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,9 +74,11 @@ const App = observer(() => {
         if (!blob) return;
 
         const reader = new FileReader();
-        reader.onload = action(
-          () => (snapshot.dataUrl = reader.result?.toString())
-        );
+        reader.onload = action(() => {
+          if (reader.result) {
+            localStorage.setItem(uuid, reader.result.toString());
+          }
+        });
         reader.readAsDataURL(blob);
       });
     }
@@ -94,7 +98,6 @@ const App = observer(() => {
 
     snapshot.paths = nextPaths;
     snapshot.index++;
-    handleExport();
   });
 
   return (
