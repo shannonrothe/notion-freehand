@@ -1,40 +1,17 @@
-import { useEffect, useState } from 'react';
 import { Toolbar } from './components/toolbar';
 import 'pollen-css';
-import { Canvas, Path } from './components/canvas';
+import { Canvas } from './components/canvas';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { action, runInAction } from 'mobx';
+import { action } from 'mobx';
 import './App.css';
-import { v4 } from 'uuid';
 import { Modal } from './components/modal';
-import { toastful } from 'react-toastful';
-import { styled } from '@stitches/react';
-
-interface HistoryEntry {
-  redo: () => void;
-  undo: () => void;
-}
-
-type State = {
-  color: string;
-  dataUrl?: string;
-  paths: Path[];
-  history: HistoryEntry[];
-  index: number;
-  open: boolean;
-  status: 'dirty' | 'saved';
-};
-
-const Success = styled('div', {
-  fontFamily: 'var(--font-sans)',
-  fontSize: 'var(--scale-00)',
-});
-
-const setPageTitle = (name: string) =>
-  (document.title = `${name} - notion-freehand`);
+import { useName } from './hooks/use_name';
+import { useHistory } from './hooks/use_history';
+import { usePersist } from './hooks/use_persist';
+import { State } from './types';
 
 const App = observer(() => {
-  const snapshot = useLocalObservable<State>(() => ({
+  const store = useLocalObservable<State>(() => ({
     color: 'color-black',
     dataUrl: '',
     paths: [],
@@ -43,133 +20,31 @@ const App = observer(() => {
     open: false,
     status: 'saved',
   }));
-  const [name, setName] = useState('');
+  const { name } = useName('', store);
+  const { record } = useHistory(store);
+  const { save } = usePersist(name, store);
 
-  useEffect(() => {
-    const _name = new URLSearchParams(window.location.search).get('name');
-    if (_name) {
-      setName(_name);
-      setPageTitle(_name);
-      try {
-        const stored = localStorage.getItem(_name);
-        if (!stored) {
-          return;
-        }
-        const file = JSON.parse(stored);
-        runInAction(() => {
-          snapshot.color = file.color;
-          snapshot.paths = file.paths;
-        });
-      } catch {
-        // Unable to load file. Do nothing.
-      }
-    } else {
-      const _name = v4();
-      window.location.href = `${window.location.href}?name=${_name}`;
-      setName(_name);
-      setPageTitle(_name);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      console.log(snapshot.index);
-      if (e.key === 'z' && e.metaKey && e.shiftKey) {
-        if (snapshot.index + 1 < snapshot.history.length) {
-          ++snapshot.index;
-        }
-        const entry = snapshot.history[snapshot.index];
-        entry?.redo();
-      } else if (e.key === 'z' && e.metaKey) {
-        if (snapshot.index > 0) {
-          --snapshot.index;
-        }
-        const entry = snapshot.history[snapshot.index];
-        entry?.undo();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  });
-
-  useEffect(() => {
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (snapshot.status === 'dirty') {
-        const leave = confirm(
-          'You have unsaved changes. Are you sure you want to leave?'
-        );
-        if (!leave) {
-          e.preventDefault();
-          e.returnValue = '';
-        }
-      }
-    };
-
-    window.addEventListener('beforeunload', onBeforeUnload);
-
-    return () => {
-      window.addEventListener('beforeunload', onBeforeUnload);
-    };
-  });
-
-  const handlePickColor = action((color: string) => (snapshot.color = color));
-  const handleExport = async () => {
-    if (name) {
-      localStorage.setItem(name, JSON.stringify(snapshot));
-      toastful.success(<Success>Changes saved</Success>, {
-        position: 'bottom_right',
-      });
-      snapshot.status = 'saved';
-      return;
-    }
-  };
-
-  const handleAddPath = action((path: Path) => {
-    const previousPaths = [...snapshot.paths];
-    const nextPaths = [...snapshot.paths, path];
-
-    snapshot.history = [
-      ...snapshot.history,
-      {
-        redo: action(() => (snapshot.paths = nextPaths)),
-        undo: action(() => (snapshot.paths = previousPaths)),
-      },
-    ];
-
-    snapshot.paths = nextPaths;
-    snapshot.index++;
-    if (snapshot.status === 'saved') {
-      snapshot.status = 'dirty';
-    }
-  });
+  const handlePickColor = action((color: string) => (store.color = color));
 
   const handleSave = action(() => {
     if (name) {
-      localStorage.setItem(name, JSON.stringify(snapshot));
-      snapshot.status = 'saved';
+      localStorage.setItem(name, JSON.stringify(store));
+      store.status = 'saved';
     }
   });
 
   return (
     <>
-      <Canvas
-        paths={snapshot.paths}
-        color={snapshot.color}
-        onAddPath={handleAddPath}
-      />
+      <Canvas paths={store.paths} color={store.color} onAddPath={record} />
       <Toolbar
-        color={snapshot.color}
-        status={snapshot.status}
+        color={store.color}
+        status={store.status}
         onPickColor={handlePickColor}
-        onExport={handleExport}
+        onExport={save}
       />
       <Modal
-        open={snapshot.open}
-        onClose={action(() => (snapshot.open = false))}
+        open={store.open}
+        onClose={action(() => (store.open = false))}
         onConfirm={handleSave}
       />
     </>

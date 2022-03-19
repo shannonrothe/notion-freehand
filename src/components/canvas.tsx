@@ -1,8 +1,8 @@
 import { styled } from '@stitches/react';
 import { action } from 'mobx';
-import { observer, useLocalObservable, useLocalStore } from 'mobx-react';
+import { observer, useLocalObservable } from 'mobx-react';
 import getStroke from 'perfect-freehand';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 type Point = {
   x: number;
@@ -29,11 +29,6 @@ export function getSvgPathFromStroke(stroke: number[][]) {
   d.push('Z');
   return d.join(' ');
 }
-
-export type Path = {
-  d: string;
-  color: string;
-};
 
 type State = {
   points: Point[];
