@@ -1,4 +1,5 @@
 import { styled } from '@stitches/react';
+import { observer } from 'mobx-react';
 
 const COLORS = [
   'color-red',
@@ -49,6 +50,14 @@ export const StyledSaveButton = styled('button', {
   '&:hover': {
     background: 'var(--color-grey-50)',
   },
+  variants: {
+    saved: {
+      true: {
+        pointerEvents: 'none',
+        opacity: '0.5',
+      },
+    },
+  },
 });
 
 const ColorButton = ({
@@ -71,26 +80,32 @@ const ColorButton = ({
   );
 };
 
-export const Toolbar = ({
-  color: selectedColor,
-  onPickColor,
-  onExport,
-}: {
-  color: string;
-  onPickColor: (color: string) => void;
-  onExport: () => void;
-}) => {
-  return (
-    <ToolbarContainer>
-      {COLORS.map((color) => (
-        <ColorButton
-          key={color}
-          selected={color === selectedColor}
-          color={color}
-          onClick={onPickColor}
-        />
-      ))}
-      <StyledSaveButton onClick={onExport}>Save</StyledSaveButton>
-    </ToolbarContainer>
-  );
-};
+export const Toolbar = observer(
+  ({
+    color: selectedColor,
+    status,
+    onPickColor,
+    onExport,
+  }: {
+    color: string;
+    status: 'saved' | 'dirty';
+    onPickColor: (color: string) => void;
+    onExport: () => void;
+  }) => {
+    return (
+      <ToolbarContainer>
+        {COLORS.map((color) => (
+          <ColorButton
+            key={color}
+            selected={color === selectedColor}
+            color={color}
+            onClick={onPickColor}
+          />
+        ))}
+        <StyledSaveButton saved={status === 'saved'} onClick={onExport}>
+          Save
+        </StyledSaveButton>
+      </ToolbarContainer>
+    );
+  }
+);

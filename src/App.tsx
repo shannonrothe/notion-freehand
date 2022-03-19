@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Toolbar } from './components/toolbar';
 import 'pollen-css';
 import { Canvas, Path } from './components/canvas';
-import { Canvg, presets } from 'canvg';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { action, runInAction } from 'mobx';
 import './App.css';
@@ -23,6 +22,7 @@ type State = {
   history: HistoryEntry[];
   index: number;
   open: boolean;
+  status: 'dirty' | 'saved';
 };
 
 const Success = styled('div', {
@@ -38,6 +38,7 @@ const App = observer(() => {
     history: [],
     index: 0,
     open: false,
+    status: 'saved',
   }));
   const [name, setName] = useState('');
 
@@ -90,6 +91,27 @@ const App = observer(() => {
     };
   });
 
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      console.log(snapshot.status);
+      if (snapshot.status === 'dirty') {
+        const leave = confirm(
+          'You have unsaved changes. Are you sure you want to leave?'
+        );
+        if (!leave) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    return () => {
+      window.addEventListener('beforeunload', onBeforeUnload);
+    };
+  });
+
   const handlePickColor = action((color: string) => (snapshot.color = color));
   const handleExport = async () => {
     if (name) {
@@ -97,6 +119,7 @@ const App = observer(() => {
       toastful.success(<Success>Changes saved</Success>, {
         position: 'bottom_right',
       });
+      snapshot.status = 'saved';
       return;
     }
   };
@@ -115,13 +138,17 @@ const App = observer(() => {
 
     snapshot.paths = nextPaths;
     snapshot.index++;
+    if (snapshot.status === 'saved') {
+      snapshot.status = 'dirty';
+    }
   });
 
-  const handleSave = () => {
+  const handleSave = action(() => {
     if (name) {
       localStorage.setItem(name, JSON.stringify(snapshot));
+      snapshot.status = 'saved';
     }
-  };
+  });
 
   return (
     <>
@@ -132,6 +159,7 @@ const App = observer(() => {
       />
       <Toolbar
         color={snapshot.color}
+        status={snapshot.status}
         onPickColor={handlePickColor}
         onExport={handleExport}
       />
