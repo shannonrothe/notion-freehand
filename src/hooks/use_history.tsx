@@ -1,6 +1,6 @@
 import { action } from 'mobx';
 import { useEffect } from 'react';
-import { HistoryEntry, Path, State, Status } from '../types';
+import { HistoryEntry, Path, State, Status, WithDimensions } from '../types';
 
 export const useHistory = (store: State) => {
   useEffect(() => {

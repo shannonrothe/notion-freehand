@@ -6,6 +6,7 @@ import { State, Status } from '../types';
 import supabase from '../lib/client';
 
 const Success = styled('p', {
+  margin: 0,
   fontFamily: 'var(--font-sans)',
   fontSize: 'var(--scale-00)',
 });
@@ -41,7 +42,7 @@ export const usePersist = (name: string, store: State) => {
       runInAction(() => (store.status = Status.DIRTY));
     } else {
       toastful.success(<Success>Changes saved</Success>, {
-        position: 'bottom_right',
+        position: 'bottom',
       });
       runInAction(() => {
         store.status = Status.SAVED;

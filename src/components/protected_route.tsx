@@ -17,7 +17,13 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useAuth();
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return (
+      <Navigate
+        to={`/login?${new URLSearchParams({
+          return: window.location.href,
+        }).toString()}`}
+      />
+    );
   }
   return <>{children}</>;
 };
