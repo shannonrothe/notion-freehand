@@ -2,11 +2,11 @@ import { Toolbar } from '../../components/toolbar';
 import 'pollen-css';
 import { Canvas } from '../../components/canvas';
 import { observer, useLocalObservable } from 'mobx-react-lite';
-import { action, computed, runInAction } from 'mobx';
+import { action, computed } from 'mobx';
 import { useDrawing } from '../../hooks/use_drawing';
 import { useHistory } from '../../hooks/use_history';
 import { usePersist } from '../../hooks/use_persist';
-import { Dimensions, Point, State, Status, WithDimensions } from '../../types';
+import { Point, State, Status, WithDimensions } from '../../types';
 import { LoadingBanner } from '../../components/loading_banner';
 import supabase from '../../lib/client';
 import { useNavigate } from 'react-router';
@@ -55,7 +55,6 @@ export const Draw = observer(() => {
   const navigate = useNavigate();
   const store = useLocalObservable<State>(() => ({
     color: 'color-black',
-    paths: [],
     history: [],
     index: 0,
     open: false,
@@ -63,16 +62,17 @@ export const Draw = observer(() => {
     selectedIds: [],
     drawing: false,
     points: [],
+    committedPoints: [],
   }));
-  const paths = computed(() =>
-    store.paths.map((p) => ({
-      id: p.id,
+  const committedPaths = computed(() =>
+    store.committedPoints.map((p) => ({
+      id: v4(),
       color: p.color,
       d: toPath(p.points),
     }))
   );
   const selectedPaths = computed(() =>
-    store.paths
+    store.committedPoints
       .filter((p) => store.selectedIds.includes(p.id))
       .map((p) => ({ id: p.id, d: toPath(p.points) }))
   );
@@ -86,9 +86,9 @@ export const Draw = observer(() => {
     const handleKeyDown = action((e: KeyboardEvent) => {
       if (e.key === 'a' && e.metaKey) {
         e.preventDefault();
-        store.selectedIds = store.paths.map((p) => p.id);
+        store.selectedIds = store.committedPoints.map((p) => p.id);
       } else if (e.key === 'Backspace') {
-        store.paths = store.paths.filter(
+        store.committedPoints = store.committedPoints.filter(
           (p) => !store.selectedIds.includes(p.id)
         );
         store.selectedIds = [];
@@ -150,7 +150,7 @@ export const Draw = observer(() => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <Canvas paths={paths} color={store.color} path={path} />
+        <Canvas paths={committedPaths} color={store.color} path={path} />
         <Selection paths={selectedPaths} />
       </Svg>
       <Toolbar

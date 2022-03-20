@@ -36,7 +36,7 @@ export const usePersist = (name: string, store: State) => {
     runInAction(() => (store.status = Status.SAVING));
     const resp = await supabase
       .from('drawings')
-      .update({ paths: store.paths })
+      .update({ points: store.committedPoints })
       .eq('name', name);
     if (resp.error) {
       runInAction(() => (store.status = Status.DIRTY));

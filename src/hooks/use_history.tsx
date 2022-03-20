@@ -1,6 +1,14 @@
 import { action } from 'mobx';
 import { useEffect } from 'react';
-import { HistoryEntry, Path, State, Status, WithDimensions } from '../types';
+import {
+  HistoryEntry,
+  Path,
+  Point,
+  State,
+  Status,
+  WithColor,
+  WithDimensions,
+} from '../types';
 
 export const useHistory = (store: State) => {
   useEffect(() => {
@@ -27,33 +35,40 @@ export const useHistory = (store: State) => {
     };
   });
 
-  const next = action((history: HistoryEntry[], nextPaths: Path[]) => {
-    store.history = history;
-    store.paths = nextPaths;
-    store.index++;
-  });
-
-  const record = action((path: Path) => {
-    const previousPaths = [...store.paths];
-    const nextPaths = [...store.paths, path];
-
-    next(
-      [
-        ...store.history,
-        {
-          redo: action(() => (store.paths = nextPaths)),
-          undo: action(() => {
-            store.status = Status.DIRTY;
-            store.paths = previousPaths;
-          }),
-        },
-      ],
-      nextPaths
-    );
-    if (store.status === Status.SAVED) {
-      store.status = Status.DIRTY;
+  const next = action(
+    (
+      history: HistoryEntry[],
+      nextPoints: WithColor<{ id: string; points: WithDimensions<Point>[] }>[]
+    ) => {
+      store.history = history;
+      store.committedPoints = nextPoints;
+      store.index++;
     }
-  });
+  );
+
+  const record = action(
+    (commit: WithColor<{ id: string; points: WithDimensions<Point>[] }>) => {
+      const previousPoints = [...store.committedPoints];
+      const nextPoints = [...store.committedPoints, commit];
+
+      next(
+        [
+          ...store.history,
+          {
+            redo: action(() => (store.committedPoints = nextPoints)),
+            undo: action(() => {
+              store.status = Status.DIRTY;
+              store.committedPoints = previousPoints;
+            }),
+          },
+        ],
+        nextPoints
+      );
+      if (store.status === Status.SAVED) {
+        store.status = Status.DIRTY;
+      }
+    }
+  );
 
   return { record };
 };
