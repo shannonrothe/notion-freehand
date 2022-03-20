@@ -5,9 +5,9 @@ import { observer } from 'mobx-react-lite';
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
+import { PrimaryButton } from '../../components/button';
 import { StyledInput } from '../../components/input';
 import { userStore } from '../../components/protected_route';
-import { StyledButton } from '../../components/toolbar';
 import supabase from '../../lib/client';
 
 const Container = styled('div', {
@@ -63,8 +63,13 @@ export const Login = observer(() => {
         runInAction(() => {
           userStore.user = resp.user;
         });
-        localStorage.setItem('accessToken', resp.session.access_token);
-        navigate('/');
+        const params = new URLSearchParams(window.location.search);
+        const returnUrl = params.get('return');
+        if (returnUrl) {
+          window.location.href = returnUrl;
+        } else {
+          navigate('/');
+        }
       }
     } catch {}
   };
@@ -84,7 +89,7 @@ export const Login = observer(() => {
           value={store.password}
           onChange={action((e) => (store.password = e.target.value))}
         />
-        <StyledButton type="submit">Log in</StyledButton>
+        <PrimaryButton type="submit">Log in</PrimaryButton>
       </Form>
       <StyledLink to="/register">Don't have an account?</StyledLink>
     </Container>

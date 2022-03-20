@@ -6,8 +6,8 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import { toastful } from 'react-toastful';
+import { PrimaryButton } from '../../components/button';
 import { StyledInput } from '../../components/input';
-import { StyledButton } from '../../components/toolbar';
 import supabase from '../../lib/client';
 
 const Container = styled('div', {
@@ -101,7 +101,7 @@ export const Register = observer(() => {
           value={store.confirmPassword}
           onChange={action((e) => (store.confirmPassword = e.target.value))}
         />
-        <StyledButton type="submit">Sign up</StyledButton>
+        <PrimaryButton type="submit">Sign up</PrimaryButton>
       </Form>
       <StyledLink to="/login">Already have an account?</StyledLink>
     </Container>
