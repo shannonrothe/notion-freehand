@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Path, State, WithDimensions } from '../types';
+import { Path, Point, State, WithColor, WithDimensions } from '../types';
 import supabase from '../lib/client';
 import { action } from 'mobx';
 import { v4 } from 'uuid';
@@ -13,16 +13,20 @@ const setPageTitle = (name: string) =>
 class DrawingPresenter {
   constructor(private readonly user: User | null) {}
 
-  async fetch(name: string): Promise<WithDimensions<Path>[]> {
+  async fetch(
+    name: string
+  ): Promise<WithColor<{ id: string; points: WithDimensions<Point>[] }>[]> {
     if (!this.user) {
       return Promise.reject();
     }
 
-    let pathsResp: { paths: WithDimensions<Path>[] } = { paths: [] };
+    let pathsResp: {
+      points: WithColor<{ id: string; points: WithDimensions<Point>[] }>[];
+    } = { points: [] };
 
     const resp = await supabase
       .from('drawings')
-      .select('paths')
+      .select('points')
       .eq('name', name)
       .eq('user_id', this.user.id)
       .single();
@@ -41,7 +45,7 @@ class DrawingPresenter {
       pathsResp = resp.data;
     }
 
-    return pathsResp.paths;
+    return pathsResp.points;
   }
 }
 
@@ -61,8 +65,8 @@ export const useDrawing = (initial: string, store: State) => {
       presenter
         .fetch(_name)
         .then(
-          action((paths) => {
-            store.paths = paths;
+          action((points) => {
+            store.committedPoints = points;
             setIsLoading(false);
           })
         )

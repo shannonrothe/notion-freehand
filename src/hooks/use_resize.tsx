@@ -5,7 +5,7 @@ import { State } from '../types';
 export const useResize = (store: State) => {
   useEffect(() => {
     const onResize = action(() => {
-      store.paths = store.paths.map((p) => ({
+      store.committedPoints = store.committedPoints.map((p) => ({
         ...p,
         points: p.points.map((point) => {
           const x = point.x / point.width;

@@ -23,18 +23,21 @@ export type Dimensions = {
   width: number;
   height: number;
 };
-export type WithDimensions<T extends Point | Path> = T & Dimensions;
+export type WithDimensions<T> = T & Dimensions;
+export type WithColor<T> = T & {
+  color: string;
+};
 
 export type State = {
   color: string;
-  paths: Path[];
+  committedPoints: WithColor<{ id: string; points: WithDimensions<Point>[] }>[];
+  points: WithDimensions<Point>[];
   history: HistoryEntry[];
   index: number;
   open: boolean;
   status: Status;
   selectedIds: string[];
   drawing: boolean;
-  points: WithDimensions<Point>[];
 };
 
 export type Point = {
